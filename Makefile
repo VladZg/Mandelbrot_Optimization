@@ -1,5 +1,5 @@
 TARGET = AVX2
-FLAGS = -mavx2 -Ofast #-mavx512vl
+FLAGS = -mavx2 -O3 #-mavx512vl
 
 all: compile link run
 

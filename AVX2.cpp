@@ -7,7 +7,7 @@
 
 using namespace sf;
 
-#define DRAW_MODE
+// #define DRAW_MODE
 
 void MandelbrotCalc(Uint8 * pixels);
 inline void printf_m256(__m256 a);
@@ -240,10 +240,10 @@ inline void SetPixels(Uint8* pixels, __m256 X0, __m256 Y0, __m256 R_max, int xi,
     for (int i = 0; i < 8; i++)
     {
         Uint8 n = (Uint8)(((int*)(&N))[i]);
-        pixels[pixel_i  ] = (255 + n) * 23 % n    ; //255 % n;            // n;
-        pixels[pixel_i+1] = (255 - n) * 23 % n    ; //255 % n % n;        // 64 + n%4*64;
-        pixels[pixel_i+2] = (255 / n) * 23 % n    ; //255 % n % n % n;    // 255 - n;
-        pixels[pixel_i+3] = 200    ; //255;                // n%255; //128 + n%2*128;
+        pixels[pixel_i  ] = 255; //(255 + n) * 23 % n    ; //255 % n;            // n;
+        pixels[pixel_i+1] = 255; //(255 - n) * 23 % n    ; //255 % n % n;        // 64 + n%4*64;
+        pixels[pixel_i+2] = 255; //(255 / n) * 23 % n    ; //255 % n % n % n;    // 255 - n;
+        pixels[pixel_i+3] = n;   //200    ; //255;                // n%255; //128 + n%2*128;
         pixel_i += 4;
     }
 }
