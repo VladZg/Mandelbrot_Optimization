@@ -106,19 +106,23 @@ int main()
 
                         case Keyboard::Key::LShift:
                         {
-                            x_min += x_min/2;
-                            x_max += x_max/2;
-                            y_min += y_min/2;
-                            y_max += y_max/2;
+                            float delta_x = (x_max - x_min)/8;
+                            float delta_y = (y_max - y_min)/8;
+                            x_min -= delta_x;
+                            x_max += delta_x;
+                            y_min -= delta_y;
+                            y_max += delta_y;
                             break;
                         }
 
                         case Keyboard::RShift:
                         {
-                            x_min -= x_min/2;
-                            x_max -= x_max/2;
-                            y_min -= y_min/2;
-                            y_max -= y_max/2;
+                            float delta_x = (x_max - x_min)/8;
+                            float delta_y = (y_max - y_min)/8;
+                            x_min += delta_x;
+                            x_max -= delta_x;
+                            y_min += delta_y;
+                            y_max -= delta_y;
                             break;
                         }
                     }

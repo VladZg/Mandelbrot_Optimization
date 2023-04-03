@@ -1,5 +1,5 @@
-TARGET = SSE
-FLAGS = -Ofast
+TARGET = AVX2
+FLAGS = -mavx2 -Ofast #-mavx512vl
 
 all: compile link run
 

@@ -95,19 +95,23 @@ int main()
 
                         case Keyboard::Key::LShift:
                         {
-                            x_min += x_min/2;
-                            x_max += x_max/2;
-                            y_min += y_min/2;
-                            y_max += y_max/2;
+                            float delta_x = (x_max - x_min)/8;
+                            float delta_y = (y_max - y_min)/8;
+                            x_min -= delta_x;
+                            x_max += delta_x;
+                            y_min -= delta_y;
+                            y_max += delta_y;
                             break;
                         }
 
                         case Keyboard::RShift:
                         {
-                            x_min -= x_min/2;
-                            x_max -= x_max/2;
-                            y_min -= y_min/2;
-                            y_max -= y_max/2;
+                            float delta_x = (x_max - x_min)/8;
+                            float delta_y = (y_max - y_min)/8;
+                            x_min += delta_x;
+                            x_max -= delta_x;
+                            y_min += delta_y;
+                            y_max -= delta_y;
                             break;
                         }
                     }
@@ -144,24 +148,25 @@ int main()
 {
     Uint8 pixels[4*num_pixels] = {};
 
-    float fps = 0.0;
     Clock clock;
-    float current_time = 0.0;
+    float fps = 0.0;
     float sum_fps = 0.0;
     int n_fps = 0;
     float avg_fps = 0.0;
 
     while (true)
     {
+        float current_time = clock.restart().asSeconds();
+
         MandelbrotCalc(pixels);
 
-        current_time = clock.restart().asSeconds();
-        fps = 1.0 / (current_time);
-        // printf("FPS: %f\n", fps_num);
+        float working_time = clock.restart().asSeconds();
+        fps = 1.f / working_time;
         n_fps++;
         sum_fps += fps;
         avg_fps = sum_fps / n_fps;
-        printf("FPS: %f => average FPS: %f\n", fps, avg_fps);
+
+        if (n_fps % 10 == 0) printf("FPS: %.2f => average FPS: %.2f\n", fps, avg_fps);
     }
 
     return 1;
