@@ -3,10 +3,11 @@
 #include <time.h>
 #include <cassert>
 #include "./AppUtils.h"
-
-// #define DRAW_MODE
+#include <emmintrin.h>
 
 using namespace sf;
+
+// #define DRAW_MODE
 
 void MandelbrotCalc(Uint8 * pixels);
 
@@ -16,13 +17,14 @@ void MandelbrotCalc(Uint8 * pixels);
 const int width = 560;
 const int height = 500;
 const int num_pixels = width * height;
-float x_max = 1.0;
-float x_min = -2.0;
-float y_max = 1.0;
-float y_min = -1.0;
+float x_max = 1.0f;
+float x_min = -2.0f;
+float y_max = 1.0f;
+float y_min = -1.0f;
 float dx = (x_max-x_min)/width;
 float dy = (y_max-y_min)/height;
-const float R0 = 10.0;
+const float r_max = 10.0f;
+const __m128 _3210 = _mm_set_ps(3.0f, 2.0f, 1.0f, 0.0f);
 
 #ifdef DRAW_MODE
 
@@ -171,42 +173,60 @@ int main()
 
 void MandelbrotCalc(Uint8 * pixels)
 {
-    float Y0 = y_max;
+    for (int i = 0; i < 4 * num_pixels; i++)
+        pixels[i] = 255;
+
+    __m128 Y0 = _mm_set1_ps(y_max);
+    __m128 Dx = _mm_mul_ps(_mm_set1_ps(dx), _3210);
+    __m128 Dy = _mm_set1_ps(dy);
+    __m128 R_max = _mm_set1_ps(r_max);
 
     for (int yi = 0; yi < height; yi++)
     {
-        float X0 = x_min;
+        Y0 = _mm_sub_ps(Y0, Dy);
 
-        for (int xi = 0; xi < width; xi++)
+        for (int xi = 0; xi < width; xi+=4)
         {
-            int n = 0;
-            float x = 0.0;
-            float y = 0.0;
-            float x2 = 0.0;
-            float y2 = 0.0;
-            float xy = 0.0;
-            float R = 0.0;
+            __m128 X0 = _mm_add_ps(_mm_set1_ps(x_min + xi*dx), Dx);
 
-            while (n++ < N_MAX && R <= R0)
+            // for (int i = 0; i < 4; i++) {printf("(%.3f %.3f) ", *(float*)(&X0 + i*sizeof(float)), *(float*)(&Y0 + i*sizeof(float)));}
+            // printf("\n");
+
+            __m128i N  = _mm_setzero_si128();
+            __m128 cmp = _mm_set1_ps(1.0f);
+            __m128 x   = _mm_set1_ps(0.0f);
+            __m128 y   = _mm_set1_ps(0.0f);
+            __m128 x2  = _mm_set1_ps(0.0f);
+            __m128 y2  = _mm_set1_ps(0.0f);
+            __m128 xy  = _mm_set1_ps(0.0f);
+            __m128 R   = _mm_set1_ps(0.0f);
+
+            for (int i = 0; i < N_MAX; i++)
             {
-                x2 = x * x;
-                y2 = y * y;
-                xy = x * y;
-                x  = x2 - y2 + X0;
-                y  = xy + xy + Y0;
-                R  = x*x + y*y;
+                x2 = _mm_mul_ps(x, x);
+                y2 = _mm_mul_ps(y, y);
+                xy = _mm_mul_ps(x, y);
+                x = _mm_add_ps(_mm_sub_ps(x2, y2), X0);
+                y = _mm_add_ps(_mm_add_ps(xy, xy), Y0);
+                R = _mm_add_ps(x2, y2);
+                cmp = _mm_cmple_ps(R, R_max);
+
+                int mask = _mm_movemask_ps(cmp);
+                if (!mask) break;
+
+                __m128i dN =_mm_castps_si128(cmp);
+                N = _mm_add_epi16(N, dN);
             }
 
+            // printf("(%d,%d): ", xi, yi);
+            // for (int i = 0; i < 4; i++) {printf("%u ", *((Uint8*)(&N + i)));}
+            // printf("\n");
+
+            // for (int i = 0; i < 4; i++) printf("%u ", (Uint8)(((int*)(&N))[i]));
+            // printf("\n");
+
             int pixel_i = 4*yi*width+4*xi;
-
-            pixels[pixel_i  ] = 255 ;
-            pixels[pixel_i+1] = 255 ;
-            pixels[pixel_i+2] = 255 ;
-            pixels[pixel_i+3] = n   ;
-
-            X0 += dx;
+            for (int i = 0; i < 4; i++) pixels[pixel_i+i*4+3] = (Uint8)(((int*)(&N))[3-i]);
         }
-
-        Y0 -= dy;
     }
 }

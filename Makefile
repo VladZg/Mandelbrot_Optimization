@@ -1,10 +1,11 @@
-TARGET = 1_NoSSE
+TARGET = SSE
+FLAGS = -Ofast
 
 all: compile link run
 
 compile:
-	@g++ -c $(TARGET).cpp -I/usr/include/ -o $(TARGET).o
-	@g++ -c AppUtils.cpp -I/usr/include/ -o AppUtils.o
+	@g++ -c $(TARGET).cpp $(FLAGS) -I/usr/include/ -o $(TARGET).o
+	@g++ -c AppUtils.cpp  $(FLAGS) -I/usr/include/ -o AppUtils.o
 
 link:
 	@g++ $(TARGET).o AppUtils.o -o $(TARGET) -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system

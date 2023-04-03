@@ -4,9 +4,19 @@
 #include <cassert>
 #include "./AppUtils.h"
 
-// #define DRAW_MODE
-
 using namespace sf;
+
+typedef float data_16f[4];
+typedef int   data_16i[4];
+
+inline void set1_ps(data_16f arr, float num) {for (int i = 0; i < 4; i++) arr[i] = num;}
+inline void set_ps(data_16f arr, float num0, float num1, float num2, float num3) {arr[0] = num0; arr[1] = num1; arr[2] = num2; arr[3] = num3;}
+inline void cmp_ps(data_16f a, const data_16f b, const data_16f c) {}
+inline void add_ps(data_16f a, const data_16f b, const data_16f c) {for (int i = 0; i < 4; i++) a[i] = b[i] + c[i];}
+inline void sub_ps(data_16f a, const data_16f b, const data_16f c) {for (int i = 0; i < 4; i++) a[i] = b[i] - c[i];}
+inline void mul_ps(data_16f a, const data_16f b, const data_16f c) {for (int i = 0; i < 4; i++) a[i] = b[i] * c[i];}
+
+// #define DRAW_MODE
 
 void MandelbrotCalc(Uint8 * pixels);
 
@@ -22,7 +32,8 @@ float y_max = 1.0;
 float y_min = -1.0;
 float dx = (x_max-x_min)/width;
 float dy = (y_max-y_min)/height;
-const float R0 = 10.0;
+const float r_max = 10.0;
+const data_16f _0123 = {0.0, 1.0, 2.0, 3.0};
 
 #ifdef DRAW_MODE
 
@@ -171,42 +182,60 @@ int main()
 
 void MandelbrotCalc(Uint8 * pixels)
 {
-    float Y0 = y_max;
+    for (int i = 0; i < 4 * num_pixels; i++)
+        pixels[i] = 255;
+
+    data_16f Y0 = {}; set1_ps(Y0, y_max);
+    data_16f Dx = {}; set1_ps(Dx, dx); mul_ps(Dx, Dx, _0123);
+    data_16f Dy = {}; set1_ps(Dy, dy);
+    data_16f R_max = {}; set1_ps(R_max, r_max);
+    int N_max[4] = {}; for (int i = 0; i < 4; i++) {N_max[i] = N_MAX;}
 
     for (int yi = 0; yi < height; yi++)
     {
-        float X0 = x_min;
+        sub_ps(Y0, Y0, Dy);
 
-        for (int xi = 0; xi < width; xi++)
+        for (int xi = 0; xi < width; xi+=4)
         {
-            int n = 0;
-            float x = 0.0;
-            float y = 0.0;
-            float x2 = 0.0;
-            float y2 = 0.0;
-            float xy = 0.0;
-            float R = 0.0;
+            data_16f X0 = {};
+            set1_ps(X0, x_min + xi*dx);
+            add_ps(X0, X0, Dx);
 
-            while (n++ < N_MAX && R <= R0)
+            // for (int i = 0; i < 4; i++) {printf("(%.3f %.3f): ", X0[i], Y0[i]);}
+            // printf("\n");
+
+            int N[4] = {0};
+            int cmp[4] = {1};
+            int mask = 1;
+
+            data_16f x  = {};
+            data_16f y  = {};
+            data_16f x2 = {};
+            data_16f y2 = {};
+            data_16f xy = {};
+            data_16f R  = {};
+
+            // for (int i = 0; i < 4; i++) { mask |= cmp[i] << i;}
+
+            while (mask)
             {
-                x2 = x * x;
-                y2 = y * y;
-                xy = x * y;
-                x  = x2 - y2 + X0;
-                y  = xy + xy + Y0;
-                R  = x*x + y*y;
+                mask = 0;
+                mul_ps(x2, x, x);
+                mul_ps(y2, y, y);
+                mul_ps(xy, x, y);
+                sub_ps(x, x2, y2); add_ps(x, x, X0);
+                add_ps(y, xy, xy); add_ps(y, y, Y0);
+                for (int i = 0; i < 4; i++) {cmp[i] = (x[i] * x[i] + y[i] * y[i] <= R_max[i]) && (N[i] <= N_MAX) ? 1 : 0;}
+                for (int i = 0; i < 4; i++) {mask += cmp[i];}
+                for (int i = 0; i < 4; i++) {N[i] += cmp[i];}
             }
 
+            // printf("(%d,%d): ", xi, yi);
+            // for (int i = 0; i < 4; i++) {printf("%d ", N[i]);}
+            // printf("\n");
+
             int pixel_i = 4*yi*width+4*xi;
-
-            pixels[pixel_i  ] = 255 ;
-            pixels[pixel_i+1] = 255 ;
-            pixels[pixel_i+2] = 255 ;
-            pixels[pixel_i+3] = n   ;
-
-            X0 += dx;
+            for (int i = 0; i < 4; i++) pixels[pixel_i+i*4+3] = (Uint8) N[i];
         }
-
-        Y0 -= dy;
     }
 }
