@@ -34,10 +34,9 @@ Evaluations made with precision ~ ``0.3 sec^(-1)``
 |optimisation \ flag|None   |-O0 |-O1 |-O2 |-O3     |-Ofast|
 |:------------------|:-----:|:--:|:--:|:--:|:------:|:----:|
 |no AVX inctructions|**2.5**|2.5 |4.3 |4.6 |4.6     |4.7   |
-|speed increase     |1.0    |1,0 |1.8 |1.8 |1.8     |1.9   |
 |                   |       |    |    |    |        |      |
-|AVX2 inctructions  |7.1    |7.3 |27.3|27.4|**27.6**|27.6  |
-|speed increase     |2.8    |2.9 |10.9|11.0|11.0    |11.0  |
+|AVX2 inctructions  |7.4    |7.3 |27.3|27.4|**27.6**|27.6  |
+|speed increase     |3.0    |2.5 |6.3 |6.0 |6.0     |5.9   |
 |                   |       |    |    |    |        |      |
 |AVX512 inctructions|       |    |    |    |        |      |
 |speed increase     |       |    |    |    |        |      |
