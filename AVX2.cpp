@@ -230,9 +230,9 @@ inline void SetPixels(Uint8* pixels, __m256 X0, __m256 Y0, __m256 R_max, int xi,
         x2 = _mm256_mul_ps(x, x);
         y2 = _mm256_mul_ps(y, y);
         xy = _mm256_mul_ps(x, y);
-        x = _mm256_add_ps(_mm256_sub_ps(x2, y2), X0);
-        y = _mm256_add_ps(_mm256_add_ps(xy, xy), Y0);
-        R = _mm256_add_ps(x2, y2);
+        x  = _mm256_add_ps(_mm256_sub_ps(x2, y2), X0);
+        y  = _mm256_add_ps(_mm256_add_ps(xy, xy), Y0);
+        R  = _mm256_add_ps(x2, y2);
 
         cmp = _mm256_cmp_ps(R_max, R, _CMP_GT_OQ);
         int mask = _mm256_movemask_ps(cmp);
