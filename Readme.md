@@ -1,25 +1,30 @@
-# Mandelbrot fractal optimisation
+# Mandelbrot fractal optimization
 
 ![Example 1](Pictures/1.png)
 
 ## Introduction
-In this work I tried to optimise algorithm of drawing Mandelbrot set by using available on my computer SIMD-instructions: AVX2 and AVX512.
+In this work I tried to optimize algorithm of drawing Mandelbrot set by using available on my computer SIMD-instructions: AVX2 and AVX512.
 
-## Drawing algorithm
+## Algorithm of drawing
 
 ... this section is in progress ...
 ... pay us to keep up to date with updates ...
 
-So perfomance of algorithm depends on amount of pixels in resulting picture
+For unsubscribed users only Python algorithm available:
+![Algorithm](Pictures/algorithm.png)
+
+...
+
+As we see, perfomance of algorithm depends on amount of pixels in resulting picture
 
 ``t ~ width * height``
 
 Number of operating pixels in algorithm is ``640*560 = 358400``. It actually takes time to process all of them, so algorithm optimization required.
 
-## Optimisation principles
-Ideas of optimisation that use AVX2 and AVX512 instructions are the same.
+## Optimization principles
+Ideas of optimization that use AVX2 and AVX512 instructions are the same.
 
-We are able to process 8 pixels at the same time by using __m256i variables and AVX2 instructions or 16 pixels by using __m512i variables and AVX512 instructions. Here is mechanism of optimisation described step-by-step.
+We are able to process 8 pixels at the same time by using __m256i variables and AVX2 instructions or 16 pixels by using __m512i variables and AVX512 instructions. Here is mechanism of optimization described step-by-step.
 
 ... this section is in progress ...
 ... pay us to keep up to date with updates ...
@@ -33,7 +38,7 @@ It's important to evaluate the time correctly, so when I do it, app don't draw a
 
 Evaluations made with precision ~ ``0.3 sec^(-1)``
 
-|optimisation \ flag|None   |-O0 |-O1 |-O2 |-O3     |-Ofast|
+|optimization \ flag|None   |-O0 |-O1 |-O2 |-O3     |-Ofast|
 |:------------------|:-----:|:--:|:--:|:--:|:------:|:----:|
 |no AVX inctructions|**2.5**|2.5 |4.3 |4.6 |4.6     |4.7   |
 |                   |       |    |    |    |        |      |
@@ -43,8 +48,14 @@ Evaluations made with precision ~ ``0.3 sec^(-1)``
 |AVX512 inctructions|       |    |    |    |        |      |
 |speed increase     |       |    |    |    |        |      |
 
+In the table speed increase calculated by formula
+``speed_increase = (optimization_time / no_optimization_time)`` ,
+where times are taken with the same set of flags
+
+Max speedup is **147,0/9.1 = 16.2**
+
 ## Conclusion
-Thus, optimising Mandelbrot set drawing algorithm by using AVX2 instructions, a speedup of **27.6/4.6 = 6.0** times was achieved
+Thus, optimizing Mandelbrot set drawing algorithm by using AVX2 instructions, a speedup of **27.6/4.6 = 6.0** times was achieved
 
 ## Colourful examples
 
