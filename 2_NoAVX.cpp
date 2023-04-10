@@ -18,13 +18,13 @@ inline void mul_ps(data_16f a, const data_16f b, const data_16f c) {for (int i =
 
 // #define DRAW_MODE
 
-void MandelbrotCalc(Uint8 * pixels);
+inline void MandelbrotCalc(Uint8 * pixels);
 
 #define CYCLE_MAX 1
 #define N_MAX     255
 
-const int width = 560;
-const int height = 500;
+const int width = 640;
+const int height = 560;
 const int num_pixels = width * height;
 float x_max = 1.0;
 float x_min = -2.0;
@@ -184,7 +184,7 @@ int main()
 
 #endif
 
-void MandelbrotCalc(Uint8 * pixels)
+inline void MandelbrotCalc(Uint8 * pixels)
 {
     for (int i = 0; i < 4 * num_pixels; i++)
         pixels[i] = 255;

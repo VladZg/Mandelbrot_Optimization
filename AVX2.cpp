@@ -28,6 +28,8 @@ float dy = (y_max-y_min)/height;
 const float r_max = 10.f;
 const __m256 Dx_coeffs = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
 
+inline void GetFps(Clock clock, float* fps, int* n_fps, float* sum_fps, float* avg_fps);
+
 #ifdef DRAW_MODE
 
 int main()
@@ -160,9 +162,11 @@ int main()
 
     while (true)
     {
-        float current_time = clock.restart().asSeconds();
+        clock.restart();
 
         MandelbrotCalc(pixels);
+
+        // GetFps(clock, &fps, &n_fps, &sum_fps, &avg_fps);
 
         float working_time = clock.restart().asSeconds();
         fps = 1.f / working_time;
@@ -177,6 +181,15 @@ int main()
 }
 
 #endif
+
+// inline void GetFps(Clock clock, float* fps, int* n_fps, float* sum_fps, float* avg_fps)
+// {
+//     float working_time = clock.restart().asSeconds();
+//     *fps = 1.f / working_time;
+//     (*n_fps)++;
+//     (*sum_fps) += *fps;
+//     (*avg_fps) = *sum_fps / *n_fps;
+// }
 
 inline void MandelbrotCalc(Uint8* pixels)
 {
@@ -195,9 +208,6 @@ inline void MandelbrotCalc(Uint8* pixels)
         for (int xi = 0; xi < width; xi+=8)
         {
             __m256 X0 = _mm256_add_ps(_mm256_set1_ps(x_min + xi*dx), Dx);
-
-            // for (int i = 0; i < 8; i++) {printf("(%.3f %.3f) ", ((float*)(&X0))[i], ((float*)(&Y0))[i]);}
-            // printf("\n");
 
             SetPixels(pixels, X0, Y0, R_max, xi, yi);
         }
@@ -232,18 +242,15 @@ inline void SetPixels(Uint8* pixels, __m256 X0, __m256 Y0, __m256 R_max, int xi,
         N = _mm256_add_epi16(N, dN);
     }
 
-    // for (int i = 0; i < 4; i++) printf("%d ", ((int*)(&N))[i]);
-    // printf("\n");
-
     int pixel_i = 4*yi*width+4*xi;
 
     for (int i = 0; i < 8; i++)
     {
         Uint8 n = (Uint8)(((int*)(&N))[i]);
-        pixels[pixel_i  ] = 255; //(255 + n) * 23 % n    ; //255 % n;            // n;
-        pixels[pixel_i+1] = 255; //(255 - n) * 23 % n    ; //255 % n % n;        // 64 + n%4*64;
-        pixels[pixel_i+2] = 255; //(255 / n) * 23 % n    ; //255 % n % n % n;    // 255 - n;
-        pixels[pixel_i+3] = n;   //200    ; //255;                // n%255; //128 + n%2*128;
+        pixels[pixel_i  ] = (255 + n) * 23 % n    ; //255 % n;            // n;
+        pixels[pixel_i+1] = (255 - n) * 23 % n    ; //255 % n % n;        // 64 + n%4*64;
+        pixels[pixel_i+2] = (255 / n) * 23 % n    ; //255 % n % n % n;    // 255 - n;
+        pixels[pixel_i+3] = 200                   ; //255;                // n%255; //128 + n%2*128;
         pixel_i += 4;
     }
 }
