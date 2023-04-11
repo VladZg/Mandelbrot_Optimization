@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "./AppUtils.h"
+#include "../Include/AppUtils.h"
 
 Music* CreateMusicObject(const char* source)
 {

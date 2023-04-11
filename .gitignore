@@ -2,6 +2,5 @@
 /1_NoAVX
 /2_NoAVX
 /AVX2
-/SSE
-/1_NoSSE
-/2_NoSSE
+/AVX512
+/Object

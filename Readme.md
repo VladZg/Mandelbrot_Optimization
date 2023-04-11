@@ -8,6 +8,7 @@ In this work I tried to optimize algorithm of drawing Mandelbrot set by using av
 ## Algorithm of drawing
 
 ... this section is in progress ...
+
 ... pay us to keep up to date with updates ...
 
 For unsubscribed users only Python algorithm available:

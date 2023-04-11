@@ -2,23 +2,15 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
 #include <cassert>
-#include "./AppUtils.h"
+#include "../Include/AppUtils.h"
+#include <immintrin.h>
 
 using namespace sf;
 
-typedef float data_16f[4];
-typedef int   data_16i[4];
-
-inline void set1_ps(data_16f arr, float num) {for (int i = 0; i < 4; i++) arr[i] = num;}
-inline void set_ps(data_16f arr, float num0, float num1, float num2, float num3) {arr[0] = num0; arr[1] = num1; arr[2] = num2; arr[3] = num3;}
-inline void cmp_ps(data_16f a, const data_16f b, const data_16f c) {}
-inline void add_ps(data_16f a, const data_16f b, const data_16f c) {for (int i = 0; i < 4; i++) a[i] = b[i] + c[i];}
-inline void sub_ps(data_16f a, const data_16f b, const data_16f c) {for (int i = 0; i < 4; i++) a[i] = b[i] - c[i];}
-inline void mul_ps(data_16f a, const data_16f b, const data_16f c) {for (int i = 0; i < 4; i++) a[i] = b[i] * c[i];}
-
 // #define DRAW_MODE
 
-inline void MandelbrotCalc(Uint8 * pixels);
+void MandelbrotCalc(Uint8 * pixels);
+inline void printf_m512(__m512 a);
 
 #define CYCLE_MAX 1
 #define N_MAX     255
@@ -26,14 +18,14 @@ inline void MandelbrotCalc(Uint8 * pixels);
 const int width = 640;
 const int height = 560;
 const int num_pixels = width * height;
-float x_max = 1.0;
-float x_min = -2.0;
-float y_max = 1.0;
-float y_min = -1.0;
+float x_max = 1.f;
+float x_min = -2.f;
+float y_max = 1.f;
+float y_min = -1.f;
 float dx = (x_max-x_min)/width;
 float dy = (y_max-y_min)/height;
-const float r_max = 10.0;
-const data_16f _0123 = {0.0, 1.0, 2.0, 3.0};
+const float r_max = 10.f;
+const __m512 Dx_coeffs = _mm512_set_ps(15.f, 14.f, 13.f, 12.f, 11.f, 10.f, 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
 
 #ifdef DRAW_MODE
 
@@ -159,87 +151,96 @@ int main()
 {
     Uint8 pixels[4*num_pixels] = {};
 
-    float fps = 0.0;
-    Clock clock;
-    float current_time = 0.0;
-    float sum_fps = 0.0;
-    int n_fps = 0;
-    float avg_fps = 0.0;
-
-    while (true)
-    {
+//     float fps = 0.0;
+//     Clock clock;
+//     float current_time = 0.0;
+//     float sum_fps = 0.0;
+//     int n_fps = 0;
+//     float avg_fps = 0.0;
+//
+//     while (true)
+//     {
         MandelbrotCalc(pixels);
+//
+//         current_time = clock.restart().asSeconds();
+//         fps = 1.0 / (current_time);
+//         // printf("FPS: %f\n", fps_num);
+//         n_fps++;
+//         sum_fps += fps;
+//         avg_fps = sum_fps / n_fps;
+//         printf("FPS: %f => average FPS: %f\n", fps, avg_fps);
+//     }
 
-        current_time = clock.restart().asSeconds();
-        fps = 1.0 / (current_time);
-        // printf("FPS: %f\n", fps_num);
-        n_fps++;
-        sum_fps += fps;
-        avg_fps = sum_fps / n_fps;
-        printf("FPS: %f => average FPS: %f\n", fps, avg_fps);
-    }
+
+    // printf_m512(_mm512_mul_ps(_mm512_set1_ps(dx), Dx_coeffs));
 
     return 1;
 }
 
 #endif
 
-inline void MandelbrotCalc(Uint8 * pixels)
+inline void MandelbrotCalc(Uint8* pixels)
 {
     for (int i = 0; i < 4 * num_pixels; i++)
         pixels[i] = 255;
 
-    data_16f Y0 = {}; set1_ps(Y0, y_max);
-    data_16f Dx = {}; set1_ps(Dx, dx); mul_ps(Dx, Dx, _0123);
-    data_16f Dy = {}; set1_ps(Dy, dy);
-    data_16f R_max = {}; set1_ps(R_max, r_max);
-    int N_max[4] = {}; for (int i = 0; i < 4; i++) {N_max[i] = N_MAX;}
+    __m512 Y0 = _mm512_set1_ps(y_max);
+    __m512 Dx = _mm512_mul_ps(_mm512_set1_ps(dx), Dx_coeffs);
+    __m512 Dy = _mm512_set1_ps(dy);
+    __m512 R_max = _mm512_set1_ps(r_max);
 
     for (int yi = 0; yi < height; yi++)
     {
-        sub_ps(Y0, Y0, Dy);
+        Y0 = _mm512_sub_ps(Y0, Dy);
 
-        for (int xi = 0; xi < width; xi+=4)
+        for (int xi = 0; xi < width; xi+=16)
         {
-            data_16f X0 = {};
-            set1_ps(X0, x_min + xi*dx);
-            add_ps(X0, X0, Dx);
+            __m512 X0 = _mm512_add_ps(_mm512_set1_ps(x_min + xi*dx), Dx);
 
-            // for (int i = 0; i < 4; i++) {printf("(%.3f %.3f): ", X0[i], Y0[i]);}
+            // for (int i = 0; i < 16; i++) {printf("(%.3f %.3f) ", ((float*)(&X0))[i], ((float*)(&Y0))[i]);}
             // printf("\n");
 
-            int N[4] = {0};
-            int cmp[4] = {1};
-            int mask = 1;
+            __m512i N  = _mm512_setzero_si512();
+            __m512 cmp = _mm512_setzero_ps();
+            __m512 x   = _mm512_setzero_ps();
+            __m512 y   = _mm512_setzero_ps();
+            __m512 x2  = _mm512_setzero_ps();
+            __m512 y2  = _mm512_setzero_ps();
+            __m512 xy  = _mm512_setzero_ps();
+            __m512 R   = _mm512_setzero_ps();
 
-            data_16f x  = {};
-            data_16f y  = {};
-            data_16f x2 = {};
-            data_16f y2 = {};
-            data_16f xy = {};
-            data_16f R  = {};
-
-            // for (int i = 0; i < 4; i++) { mask |= cmp[i] << i;}
-
-            while (mask)
+            for (int i = 0; i < N_MAX; i++)
             {
-                mask = 0;
-                mul_ps(x2, x, x);
-                mul_ps(y2, y, y);
-                mul_ps(xy, x, y);
-                sub_ps(x, x2, y2); add_ps(x, x, X0);
-                add_ps(y, xy, xy); add_ps(y, y, Y0);
-                for (int i = 0; i < 4; i++) {cmp[i] = (x[i] * x[i] + y[i] * y[i] <= R_max[i]) && (N[i] <= N_MAX) ? 1 : 0;}
-                for (int i = 0; i < 4; i++) {mask += cmp[i];}
-                for (int i = 0; i < 4; i++) {N[i] += cmp[i];}
+                x2 = _mm512_mul_ps(x, x);
+                y2 = _mm512_mul_ps(y, y);
+                xy = _mm512_mul_ps(x, y);
+                x = _mm512_add_ps(_mm512_sub_ps(x2, y2), X0);
+                y = _mm512_add_ps(_mm512_add_ps(xy, xy), Y0);
+                R = _mm512_add_ps(x2, y2);
+
+                __m256 cmp1 = _mm256_cmp_ps(R, R_max, 1);
+                __m256 cmp2 = _mm256_cmp_ps(R, R_max, 1);
+
+                int mask1 = _mm256_movemask_ps(cmp1);
+                int mask2 = _mm256_movemask_ps(cmp2);
+
+                if (!(mask1 && mask2)) break;
+
+                __m512 cmp =
+                __m512i dN =_mm512_castps_si512(cmp);
+                N = _mm512_add_epi16(N, dN);
             }
-
-            // printf("(%d,%d): ", xi, yi);
-            // for (int i = 0; i < 4; i++) {printf("%d ", N[i]);}
-            // printf("\n");
-
-            int pixel_i = 4*yi*width+4*xi;
-            for (int i = 0; i < 4; i++) pixels[pixel_i+i*4+3] = (Uint8) N[i];
+//             // for (int i = 0; i < 4; i++) printf("%u ", (Uint8)(((int*)(&N))[i]));
+//             // printf("\n");
+//
+//             int pixel_i = 4*yi*width+4*xi;
+//             for (int i = 0; i < 8; i++) pixels[pixel_i+i*4+3] = (Uint8)(((int*)(&N))[i]);
         }
     }
+}
+
+inline void printf_m512(__m512 a)
+{
+    for (int i = 0; i < 16; i++) printf("%f ", ((float*)(&a))[i]);
+    printf("\n");
 }
