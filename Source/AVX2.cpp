@@ -1,22 +1,20 @@
+#include "../Include/Config.h"
 #include <stdlib.h>
 #include <SFML/Graphics.hpp>
 #include <time.h>
 #include <cassert>
 #include "../Include/AppUtils.h"
+#include "../Include/IntrinsicsPrintf.h"
 #include <immintrin.h>
 
-using namespace sf;
-
-// #define DRAW_MODE
+#define DRAW_MODE
 
 inline void MandelbrotCalc(Color* pixels);
 inline __m256i GetIteration(__m256 X0, __m256 Y0);
 
-inline void printf_m256(__m256 a);
-inline void printf_m256i(__m256i a);
-
 #define CYCLE_MAX 1
 #define N_MAX     255
+#define VECT_SIZE 8
 
 const int width  = 640;
 const int height = 560;
@@ -209,14 +207,14 @@ inline void MandelbrotCalc(Color* pixels)
     __m256 Y0 = _mm256_set1_ps(y_max);
 
     __m256 xShift = _mm256_mul_ps(_mm256_set1_ps(dx), xShift_coeffs);
-    __m256 Dx =  _mm256_set1_ps(8*dx);
+    __m256 Dx =  _mm256_set1_ps(VECT_SIZE*dx);
     __m256 Dy = _mm256_set1_ps(dy);
 
     for (int yi = 0; yi < height; yi++)
     {
         __m256 X0 = _mm256_add_ps( _mm256_set1_ps(x_min), xShift);
 
-        for (int xi = 0; xi < width; xi+=8)
+        for (int xi = 0; xi < width; xi+=VECT_SIZE)
         {
             // printf_m256(X0);
             // printf_m256(Y0);
@@ -229,13 +227,14 @@ inline void MandelbrotCalc(Color* pixels)
             int* N_int = (int*)(&N);
             int pixel_i = yi*width+xi;
 
-            for (int i = 0; i < 8; i++, pixel_i++)
+            for (int i = 0; i < VECT_SIZE; i++, pixel_i++)
             {
                 Uint8 n = (Uint8)(N_int[i]);
-                pixels[pixel_i] = {n, 255, n, n};   //255 % n;            // n;
-                                                    //255 % n % n;        // 64 + n%4*64;
-                                                    //255 % n % n % n;    // 255 - n;
-                                                    //255;                // n%255; //128 + n%2*128;
+                pixels[pixel_i] = {(Uint8)n, (Uint8)(64+n%4*64), (Uint8)(255-n), (Uint8)(128+n%2*128)};
+                //255 % n;            // n;
+                //255 % n % n;        // 64 + n%4*64;
+                //255 % n % n % n;    // 255 - n;
+                //255;                // n%255; //128 + n%2*128;
             }
 
             X0 = _mm256_add_ps(X0, Dx);
@@ -273,16 +272,4 @@ inline __m256i GetIteration(__m256 X0, __m256 Y0)
     }
 
     return N;
-}
-
-inline void printf_m256(__m256 a)
-{
-    for (int i = 0; i < 8; i++) printf("%f ", ((float*)(&a))[i]);
-    printf("\n");
-}
-
-inline void printf_m256i(__m256i a)
-{
-    for (int i = 0; i < 8; i++) printf("%d ", (Uint8)(((int*)(&a))[i]));
-    printf("\n");
 }

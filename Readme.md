@@ -39,16 +39,20 @@ It's important to evaluate the time correctly, so when I do it, app don't draw a
 
 Evaluations made with precision ~ ``0.3 sec^(-1)``
 
-|optimization \ flag|None    |-O0 |-O1 |-O2  |-O3      |-Ofast|
-|:------------------|:------:|:--:|:--:|:--: |:-------:|:----:|
-|no AVX inctructions|**2.5** |2.5 |4.5 |4.5  |4.6      |4.8   |
-|                   |        |    |    |     |         |      |
-|AVX2 inctructions  |**8.3** |8.3 |29.5|157.1|**157.1**|156.9 |
-|abs speed increase |3.3     |3.3 |6.6 |34.9 |34.2     |32.7  |
-|                   |        |    |    |     |         |      |
-|AVX512 inctructions|**14.2**|14.2|44.2|155.1|156.2    |155.2 |
-|abs speed increase |5.7     |5.7 |9.8 |34.5 |34.0     |32.3  |
-|rel speed increase |1.7     |1.7 |1.5 |~1.0 |~1.0     |~1.0  |
+|optimization \ flag|None    |-O0 |-O1 |-O2  |-O3      |-Ofast   |
+|:------------------|:------:|:--:|:--:|:--: |:-------:|:-------:|
+|no AVX inctructions|**2.5** |2.5 |4.5 |4.5  |4.6      |4.8      |
+|                   |        |    |    |     |         |         |
+|SSE inctructions   |**4.1** |4.1 |16.9|162.7|**163.1**|163.0    |
+|abs speed increase |**1.6** |1.6 |3.8 |36.2 |35.5     |34.0     |
+|                   |        |    |    |     |         |         |
+|AVX2 inctructions  |**8.3** |8.3 |29.5|157.1|157.1    |156.9    |
+|abs speed increase |**3.3** |3.3 |6.6 |34.9 |34.2     |32.7     |
+|rel speed increase |**2.1** |2.1 |1.7 |~1.0 |~1.0     |~1.0     |
+|                   |        |    |    |     |         |         |
+|AVX512 inctructions|**14.2**|14.2|44.2|155.1|156.2    |155.2    |
+|abs speed increase |**5.7** |5.7 |9.8 |34.5 |34.0     |32.3     |
+|rel speed increase |**1.7** |1.7 |1.5 |~1.0 |~1.0     |~1.0     |
 
 In the table speed increase calculated by formula
 ``speed_increase = (optimization_time / no_optimization_time)`` ,

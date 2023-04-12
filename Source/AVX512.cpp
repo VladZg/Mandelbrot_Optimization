@@ -1,22 +1,20 @@
+#include "../Include/Config.h"
 #include <stdlib.h>
 #include <SFML/Graphics.hpp>
 #include <time.h>
 #include <cassert>
 #include "../Include/AppUtils.h"
+#include "../Include/IntrinsicsPrintf.h"
 #include <immintrin.h>
 
-using namespace sf;
-
-// #define DRAW_MODE
+#define DRAW_MODE
 
 inline void MandelbrotCalc(Color* pixels);
 inline __m512i GetIteration(__m512 X0, __m512 Y0);
 
-inline void printf_m512(__m512 a);
-inline void printf_m512i(__m512i a);
-
 #define CYCLE_MAX 1
 #define N_MAX     255
+#define VECT_SIZE 16
 
 const int width  = 640;
 const int height = 560;
@@ -198,14 +196,14 @@ inline void MandelbrotCalc(Color* pixels)
     __m512 Y0 = _mm512_set1_ps(y_max);
 
     __m512 xShift = _mm512_mul_ps(_mm512_set1_ps(dx), xShift_coeffs);
-    __m512 Dx =  _mm512_set1_ps(16*dx);
+    __m512 Dx =  _mm512_set1_ps(VECT_SIZE*dx);
     __m512 Dy = _mm512_set1_ps(dy);
 
     for (int yi = 0; yi < height; yi++)
     {
         __m512 X0 = _mm512_add_ps( _mm512_set1_ps(x_min), xShift);
 
-        for (int xi = 0; xi < width; xi+=16)
+        for (int xi = 0; xi < width; xi+=VECT_SIZE)
         {
             // printf_m512(X0);
             // printf_m512(Y0);
@@ -218,13 +216,14 @@ inline void MandelbrotCalc(Color* pixels)
             int* N_int = (int*)(&N);
             int pixel_i = yi*width+xi;
 
-            for (int i = 0; i < 16; i++, pixel_i++)
+            for (int i = 0; i < VECT_SIZE; i++, pixel_i++)
             {
                 Uint8 n = (Uint8)(N_int[i]);
-                pixels[pixel_i] = {n, 255, n, n};   //255 % n;            // n;
-                                                    //255 % n % n;        // 64 + n%4*64;
-                                                    //255 % n % n % n;    // 255 - n;
-                                                    //255;                // n%255; //128 + n%2*128;
+                pixels[pixel_i] = {(Uint8)(255%n), (Uint8)(255%n%n), (Uint8)(255%n%n%n), (Uint8)255};
+                //255 % n;            // n;
+                //255 % n % n;        // 64 + n%4*64;
+                //255 % n % n % n;    // 255 - n;
+                //255;                // n%255; //128 + n%2*128;
             }
 
             X0 = _mm512_add_ps(X0, Dx);
@@ -260,22 +259,11 @@ inline __m512i GetIteration(__m512 X0, __m512 Y0)
         // __m128i mask = _mm_set1_epi32(1);
         // mask = _mm_maskz_broadcastb_epi8(cmp, mask);
         // __m512i dN =_mm512_cvtepu8_epi32(mask);
+
         __m512i dN = _mm512_setzero_epi32();
         dN = _mm512_mask_blend_epi32(cmp, _mm512_setzero_epi32(), _mm512_set1_epi32(1));
         N = _mm512_add_epi16(N, dN);
     }
 
     return N;
-}
-
-inline void printf_m512(__m512 a)
-{
-    for (int i = 0; i < 16; i++) printf("%f ", ((float*)(&a))[i]);
-    printf("\n");
-}
-
-inline void printf_m512i(__m512i a)
-{
-    for (int i = 0; i < 16; i++) printf("%d ", (Uint8)(((int*)(&a))[i]));
-    printf("\n");
 }

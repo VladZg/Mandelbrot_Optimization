@@ -1,23 +1,25 @@
 #include "../Include/Config.h"
 #include <stdlib.h>
-#include <SFML/Graphics.hpp>
 #include <time.h>
 #include <cassert>
 #include "../Include/AppUtils.h"
+#include "../Include/IntrinsicsPrintf.h"
+#include <emmintrin.h>
 
-// #define DRAW_MODE
+#define DRAW_MODE
 
-void MandelbrotCalc(Color* pixels);
-Uint8 GetIteration(float X0, float Y0);
+inline void MandelbrotCalc(Color* pixels);
+inline __m128i GetIteration(__m128 X0, __m128 Y0);
 
-#define N_CYCLE 1
-#define N_MAX   255
+#define CYCLE_MAX 1
+#define N_MAX     255
+#define VECT_SIZE 4
 
-const int width = 640;
+const int width  = 640;
 const int height = 560;
 const int num_pixels = width * height;
 
-const float R_max = 10.0;
+const float r_max = 10.0;
 
 float x_max =  1.0;
 float x_min = -2.0;
@@ -25,6 +27,11 @@ float y_max =  1.0;
 float y_min = -1.0;
 float dx = (x_max-x_min)/width;
 float dy = (y_max-y_min)/height;
+
+const __m128 xShift_coeffs = _mm_set_ps(3.0, 2.0, 1.0, 0.0);
+const __m128 R_max = _mm_set1_ps(r_max);
+
+inline void GetFps(Clock clock, float* fps, int* n_fps, float* sum_fps, float* avg_fps);
 
 #ifdef DRAW_MODE
 
@@ -185,51 +192,83 @@ int main()
 
 #endif
 
-void MandelbrotCalc(Color* pixels)
+// inline void GetFps(Clock clock, float* fps, int* n_fps, float* sum_fps, float* avg_fps)
+// {
+//     float working_time = clock.restart().asSeconds();
+//     *fps = 1.f / working_time;
+//     (*n_fps)++;
+//     (*sum_fps) += *fps;
+//     (*avg_fps) = *sum_fps / *n_fps;
+// }
+
+inline void MandelbrotCalc(Color* pixels)
 {
-    float Y0 = y_max;
+    __m128 Y0 = _mm_set1_ps(y_max);
+
+    __m128 xShift = _mm_mul_ps(_mm_set1_ps(dx), xShift_coeffs);
+    __m128 Dx =  _mm_set1_ps(VECT_SIZE*dx);
+    __m128 Dy = _mm_set1_ps(dy);
 
     for (int yi = 0; yi < height; yi++)
     {
-        float X0 = x_min;
+        __m128 X0 = _mm_add_ps( _mm_set1_ps(x_min), xShift);
 
-        for (int xi = 0; xi < width; xi++)
+        for (int xi = 0; xi < width; xi+=VECT_SIZE)
         {
-            // printf("%f\n", X0);
-            // printf("%f\n", Y0);
+            // printf_m128(X0);
+            // printf_m128(Y0);
             // printf("\n");
 
-            Uint8 n = GetIteration(X0, Y0);
-            // printf("%d ", n);
+            __m128i N = GetIteration(X0, Y0);
 
-            pixels[yi*width+xi] = {n, 255, n, n};
+            // printf_m128i(N);
 
-            X0 += dx;
+            int* N_int = (int*)(&N);
+            int pixel_i = yi*width+xi;
+
+            for (int i = 0; i < VECT_SIZE; i++, pixel_i++)
+            {
+                Uint8 n = (Uint8)(N_int[i]);
+                pixels[pixel_i] = {(Uint8)144*n/17, (Uint8)255+n*19, (Uint8)n%6*50, (Uint8)255};
+                //255 % n;            // n;
+                //255 % n % n;        // 64 + n%4*64;
+                //255 % n % n % n;    // 255 - n;
+                //255;                // n%255; //128 + n%2*128;
+            }
+
+            X0 = _mm_add_ps(X0, Dx);
         }
 
-        Y0 -= dy;
+        Y0 = _mm_sub_ps(Y0, Dy);
     }
 }
 
-Uint8 GetIteration(float X0, float Y0)
+inline __m128i GetIteration(__m128 X0, __m128 Y0)
 {
-    Uint8 n_iter = 0;
-    float x  = 0.0;
-    float y  = 0.0;
-    float x2 = 0.0;
-    float y2 = 0.0;
-    float xy = 0.0;
-    float R  = 0.0;
+    __m128i N  = _mm_setzero_si128();
+    __m128 x   = _mm_setzero_ps();
+    __m128 y   = _mm_setzero_ps();
+    __m128 x2  = _mm_setzero_ps();
+    __m128 y2  = _mm_setzero_ps();
+    __m128 xy  = _mm_setzero_ps();
+    __m128 R   = _mm_setzero_ps();
 
-    for (; R < R_max && n_iter < N_MAX; n_iter++)
+    for (int i = 0; i < N_MAX; i++)
     {
-        x2 = x * x;
-        y2 = y * y;
-        xy = x * y;
-        x  = x2 - y2 + X0;
-        y  = xy + xy + Y0;
-        R  = x*x + y*y;
+        __m128 cmp = _mm_cmp_ps(R_max, R, _CMP_GT_OQ);
+        int mask = _mm_movemask_ps(cmp);
+        if (!mask) break;
+
+        x2 = _mm_mul_ps(x, x);
+        y2 = _mm_mul_ps(y, y);
+        xy = _mm_mul_ps(x, y);
+        x  = _mm_add_ps(_mm_sub_ps(x2, y2), X0);
+        y  = _mm_add_ps(_mm_add_ps(xy, xy), Y0);
+        R  = _mm_add_ps(x2, y2);
+
+        __m128i dN =_mm_castps_si128(cmp);
+        N = _mm_add_epi16(N, dN);
     }
 
-    return n_iter;
+    return N;
 }
