@@ -78,3 +78,13 @@ Thus, optimizing Mandelbrot set drawing algorithm by using AVX2 instructions, a 
 ![Example 7](Pictures/7.png)
 
 ![Example 8](Pictures/8.png)
+
+![Example 9](Pictures/9.png)
+
+![Example 10](Pictures/10.png)
+
+![Example 11](Pictures/11.png)
+
+![Example 12](Pictures/12.png)
+
+![Example 13](Pictures/13.png)
