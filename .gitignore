@@ -1,6 +1,6 @@
 /*.o
-/1_NoAVX
-/2_NoAVX
+/NoAVX
+/SSE
 /AVX2
 /AVX512
 /Object
