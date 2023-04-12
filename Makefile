@@ -1,5 +1,11 @@
-TARGET = 1_NoAVX
-FLAGS = #-mavx2 -O3 #-mavx512vl
+TARGET = AVX512
+
+NoAVX_FLAGS  =
+AVX2_FLAGS   = -mavx2
+AVX512_FLAGS = -mavx512vl -mavx512bw
+OPTM_FLAGS   =
+
+FLAGS = $($(TARGET)_FLAGS) $(OPTIM_FLAGS)
 SRC_DIR = ./Source
 OBJ_DIR = ./Object
 

@@ -4,26 +4,28 @@
 #include <cassert>
 #include "../Include/AppUtils.h"
 
-#define DRAW_MODE
+// #define DRAW_MODE
 
 using namespace sf;
 
 void MandelbrotCalc(Color* pixels);
 Uint8 GetIteration(float X0, float Y0);
 
-#define CYCLE_MAX 1
-#define N_MAX     255
+#define N_CYCLE 1
+#define N_MAX   255
 
 const int width = 640;
 const int height = 560;
 const int num_pixels = width * height;
-float x_max = 1.0;
+
+const float R_max = 10.0;
+
+float x_max =  1.0;
 float x_min = -2.0;
-float y_max = 1.0;
+float y_max =  1.0;
 float y_min = -1.0;
 float dx = (x_max-x_min)/width;
 float dy = (y_max-y_min)/height;
-const float R0 = 10.0;
 
 #ifdef DRAW_MODE
 
@@ -75,6 +77,8 @@ int main()
                 }
             }
         }
+
+        clock.restart();
 
         MandelbrotCalc(pixels);
 
@@ -164,7 +168,7 @@ int main()
 
     while (true)
     {
-        float current_time = clock.restart().asSeconds();
+        clock.restart();
 
         MandelbrotCalc(pixels);
 
@@ -192,7 +196,12 @@ void MandelbrotCalc(Color* pixels)
 
         for (int xi = 0; xi < width; xi++)
         {
+            // printf("%f\n", X0);
+            // printf("%f\n", Y0);
+            // printf("\n");
+
             Uint8 n = GetIteration(X0, Y0);
+            // printf("%d ", n);
 
             pixels[yi*width+xi] = {n, 255, n, n};
 
@@ -213,7 +222,7 @@ Uint8 GetIteration(float X0, float Y0)
     float xy = 0.0;
     float R  = 0.0;
 
-    for (; R < R0 && n_iter < N_MAX; n_iter++)
+    for (; R < R_max && n_iter < N_MAX; n_iter++)
     {
         x2 = x * x;
         y2 = y * y;

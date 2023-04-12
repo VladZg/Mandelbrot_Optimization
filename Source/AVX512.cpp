@@ -9,33 +9,42 @@ using namespace sf;
 
 // #define DRAW_MODE
 
-void MandelbrotCalc(Uint8 * pixels);
+inline void MandelbrotCalc(Color* pixels);
+inline __m512i GetIteration(__m512 X0, __m512 Y0);
+
 inline void printf_m512(__m512 a);
+inline void printf_m512i(__m512i a);
 
 #define CYCLE_MAX 1
 #define N_MAX     255
 
-const int width = 640;
+const int width  = 640;
 const int height = 560;
 const int num_pixels = width * height;
-float x_max = 1.f;
-float x_min = -2.f;
-float y_max = 1.f;
-float y_min = -1.f;
+
+const float r_max = 10.0;
+
+float x_max =  1.0;
+float x_min = -2.0;
+float y_max =  1.0;
+float y_min = -1.0;
 float dx = (x_max-x_min)/width;
 float dy = (y_max-y_min)/height;
-const float r_max = 10.f;
-const __m512 Dx_coeffs = _mm512_set_ps(15.f, 14.f, 13.f, 12.f, 11.f, 10.f, 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
+
+const __m512 xShift_coeffs = _mm512_set_ps(15.f, 14.f, 13.f, 12.f, 11.f, 10.f, 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
+const __m512 R_max = _mm512_set1_ps(r_max);
 
 #ifdef DRAW_MODE
+
+void MoveScreen(int keycode, float* x_max, float* x_min, float* y_max, float* y_min);
 
 int main()
 {
     RenderWindow window(VideoMode(width, height), "Mandelbrot");
-    Uint8 pixels[4*num_pixels] = {};
+    Color pixels[num_pixels] = {};
 
     Image image;
-    image.create(width, height, pixels);
+    image.create(width, height, (Uint8*)pixels);
     Texture texture;
     texture.loadFromImage(image);
     Sprite sprite(texture);
@@ -66,58 +75,7 @@ int main()
 
                 case Event::KeyPressed:
                 {
-                    switch(event.key.code)
-                    {
-                        case Keyboard::A:
-                        {
-                            x_min -= 5*dx;
-                            x_max -= 5*dx;
-                            break;
-                        }
-
-                        case Keyboard::D:
-                        {
-                            x_min += 5*dx;
-                            x_max += 5*dx;
-                            break;
-                        }
-
-                        case Keyboard::W:
-                        {
-                            y_min += 5*dy;
-                            y_max += 5*dy;
-                            break;
-                        }
-
-                        case Keyboard::S:
-                        {
-                            y_min -= 5*dy;
-                            y_max -= 5*dy;
-                            break;
-                        }
-
-                        case Keyboard::Key::LShift:
-                        {
-                            float delta_x = (x_max - x_min)/8;
-                            float delta_y = (y_max - y_min)/8;
-                            x_min -= delta_x;
-                            x_max += delta_x;
-                            y_min -= delta_y;
-                            y_max += delta_y;
-                            break;
-                        }
-
-                        case Keyboard::RShift:
-                        {
-                            float delta_x = (x_max - x_min)/8;
-                            float delta_y = (y_max - y_min)/8;
-                            x_min += delta_x;
-                            x_max -= delta_x;
-                            y_min += delta_y;
-                            y_max -= delta_y;
-                            break;
-                        }
-                    }
+                    MoveScreen(event.key.code, &x_max, &x_min, &y_max, &y_min);
 
                     dx = (x_max-x_min)/width;
                     dy = (y_max-y_min)/height;
@@ -127,9 +85,11 @@ int main()
             }
         }
 
+        clock.restart();
+
         MandelbrotCalc(pixels);
 
-        texture.update(pixels, width, height, 0, 0);
+        texture.update((Uint8*)pixels, width, height, 0, 0);
         sprite.setTexture(texture);
 
         current_time = clock.restart().asSeconds();
@@ -145,102 +105,177 @@ int main()
     return 1;
 }
 
+void MoveScreen(int keycode, float* x_max, float* x_min, float* y_max, float* y_min)
+{
+    switch(keycode)
+    {
+        case Keyboard::A:
+        {
+            *x_min -= 5*dx;
+            *x_max -= 5*dx;
+            break;
+        }
+
+        case Keyboard::D:
+        {
+            *x_min += 5*dx;
+            *x_max += 5*dx;
+            break;
+        }
+
+        case Keyboard::W:
+        {
+            *y_min += 5*dy;
+            *y_max += 5*dy;
+            break;
+        }
+
+        case Keyboard::S:
+        {
+            *y_min -= 5*dy;
+            *y_max -= 5*dy;
+            break;
+        }
+
+        case Keyboard::Key::LShift:
+        {
+            float delta_x = (*x_max - *x_min)/8;
+            float delta_y = (*y_max - *y_min)/8;
+            *x_min -= delta_x;
+            *x_max += delta_x;
+            *y_min -= delta_y;
+            *y_max += delta_y;
+            break;
+        }
+
+        case Keyboard::RShift:
+        {
+            float delta_x = (*x_max - *x_min)/8;
+            float delta_y = (*y_max - *y_min)/8;
+            *x_min += delta_x;
+            *x_max -= delta_x;
+            *y_min += delta_y;
+            *y_max -= delta_y;
+            break;
+        }
+    }
+}
+
 #else
 
 int main()
 {
-    Uint8 pixels[4*num_pixels] = {};
+    Color pixels[num_pixels] = {};
 
-//     float fps = 0.0;
-//     Clock clock;
-//     float current_time = 0.0;
-//     float sum_fps = 0.0;
-//     int n_fps = 0;
-//     float avg_fps = 0.0;
-//
-//     while (true)
-//     {
+    Clock clock;
+    float fps = 0.0;
+    float sum_fps = 0.0;
+    int   n_fps = 0;
+    float avg_fps = 0.0;
+
+    while (true)
+    {
+        clock.restart();
+
         MandelbrotCalc(pixels);
-//
-//         current_time = clock.restart().asSeconds();
-//         fps = 1.0 / (current_time);
-//         // printf("FPS: %f\n", fps_num);
-//         n_fps++;
-//         sum_fps += fps;
-//         avg_fps = sum_fps / n_fps;
-//         printf("FPS: %f => average FPS: %f\n", fps, avg_fps);
-//     }
 
+        float working_time = clock.restart().asSeconds();
+        fps = 1.f / working_time;
+        n_fps++;
+        sum_fps += fps;
+        avg_fps = sum_fps / n_fps;
 
-    // printf_m512(_mm512_mul_ps(_mm512_set1_ps(dx), Dx_coeffs));
+        if (n_fps % 10 == 0) printf("FPS: %.2f => average FPS: %.2f\n", fps, avg_fps);
+    }
 
     return 1;
 }
 
 #endif
 
-inline void MandelbrotCalc(Uint8* pixels)
+inline void MandelbrotCalc(Color* pixels)
 {
-    for (int i = 0; i < 4 * num_pixels; i++)
-        pixels[i] = 255;
-
     __m512 Y0 = _mm512_set1_ps(y_max);
-    __m512 Dx = _mm512_mul_ps(_mm512_set1_ps(dx), Dx_coeffs);
+
+    __m512 xShift = _mm512_mul_ps(_mm512_set1_ps(dx), xShift_coeffs);
+    __m512 Dx =  _mm512_set1_ps(16*dx);
     __m512 Dy = _mm512_set1_ps(dy);
-    __m512 R_max = _mm512_set1_ps(r_max);
 
     for (int yi = 0; yi < height; yi++)
     {
-        Y0 = _mm512_sub_ps(Y0, Dy);
+        __m512 X0 = _mm512_add_ps( _mm512_set1_ps(x_min), xShift);
 
         for (int xi = 0; xi < width; xi+=16)
         {
-            __m512 X0 = _mm512_add_ps(_mm512_set1_ps(x_min + xi*dx), Dx);
-
-            // for (int i = 0; i < 16; i++) {printf("(%.3f %.3f) ", ((float*)(&X0))[i], ((float*)(&Y0))[i]);}
+            // printf_m512(X0);
+            // printf_m512(Y0);
             // printf("\n");
 
-            __m512i N  = _mm512_setzero_si512();
-            __m512 cmp = _mm512_setzero_ps();
-            __m512 x   = _mm512_setzero_ps();
-            __m512 y   = _mm512_setzero_ps();
-            __m512 x2  = _mm512_setzero_ps();
-            __m512 y2  = _mm512_setzero_ps();
-            __m512 xy  = _mm512_setzero_ps();
-            __m512 R   = _mm512_setzero_ps();
+            __m512i N = GetIteration(X0, Y0);
 
-            for (int i = 0; i < N_MAX; i++)
+            // printf_m512i(N);
+
+            int* N_int = (int*)(&N);
+            int pixel_i = yi*width+xi;
+
+            for (int i = 0; i < 16; i++, pixel_i++)
             {
-                x2 = _mm512_mul_ps(x, x);
-                y2 = _mm512_mul_ps(y, y);
-                xy = _mm512_mul_ps(x, y);
-                x = _mm512_add_ps(_mm512_sub_ps(x2, y2), X0);
-                y = _mm512_add_ps(_mm512_add_ps(xy, xy), Y0);
-                R = _mm512_add_ps(x2, y2);
-
-                __m256 cmp1 = _mm256_cmp_ps(R, R_max, 1);
-                __m256 cmp2 = _mm256_cmp_ps(R, R_max, 1);
-
-                int mask1 = _mm256_movemask_ps(cmp1);
-                int mask2 = _mm256_movemask_ps(cmp2);
-
-                if (!(mask1 && mask2)) break;
-
-                __m512 cmp =
-                __m512i dN =_mm512_castps_si512(cmp);
-                N = _mm512_add_epi16(N, dN);
+                Uint8 n = (Uint8)(N_int[i]);
+                pixels[pixel_i] = {n, 255, n, n};   //255 % n;            // n;
+                                                    //255 % n % n;        // 64 + n%4*64;
+                                                    //255 % n % n % n;    // 255 - n;
+                                                    //255;                // n%255; //128 + n%2*128;
             }
-//             // for (int i = 0; i < 4; i++) printf("%u ", (Uint8)(((int*)(&N))[i]));
-//             // printf("\n");
-//
-//             int pixel_i = 4*yi*width+4*xi;
-//             for (int i = 0; i < 8; i++) pixels[pixel_i+i*4+3] = (Uint8)(((int*)(&N))[i]);
+
+            X0 = _mm512_add_ps(X0, Dx);
         }
+
+        Y0 = _mm512_sub_ps(Y0, Dy);
     }
+}
+
+inline __m512i GetIteration(__m512 X0, __m512 Y0)
+{
+    __m512i N   = _mm512_setzero_si512();
+    __m512  x   = _mm512_setzero_ps();
+    __m512  y   = _mm512_setzero_ps();
+    __m512  x2  = _mm512_setzero_ps();
+    __m512  y2  = _mm512_setzero_ps();
+    __m512  xy  = _mm512_setzero_ps();
+    __m512  R   = _mm512_setzero_ps();
+
+    for (int i = 0; i < N_MAX; i++)
+    {
+        __mmask16 cmp = _mm512_cmp_ps_mask(R_max, R, _CMP_GT_OQ);   // _mm512_xor_ps
+        // int mask = _mm_movemask_ps(cmp);                    // ?
+        if (!cmp) break;
+
+        x2 = _mm512_mul_ps(x, x);
+        y2 = _mm512_mul_ps(y, y);
+        xy = _mm512_mul_ps(x, y);
+        x  = _mm512_add_ps(_mm512_sub_ps(x2, y2), X0);
+        y  = _mm512_add_ps(_mm512_add_ps(xy, xy), Y0);
+        R  = _mm512_add_ps(x2, y2);
+
+        // __m128i mask = _mm_set1_epi32(1);
+        // mask = _mm_maskz_broadcastb_epi8(cmp, mask);
+        // __m512i dN =_mm512_cvtepu8_epi32(mask);
+        __m512i dN = _mm512_setzero_epi32();
+        dN = _mm512_mask_blend_epi32(cmp, _mm512_setzero_epi32(), _mm512_set1_epi32(1));
+        N = _mm512_add_epi16(N, dN);
+    }
+
+    return N;
 }
 
 inline void printf_m512(__m512 a)
 {
     for (int i = 0; i < 16; i++) printf("%f ", ((float*)(&a))[i]);
+    printf("\n");
+}
+
+inline void printf_m512i(__m512i a)
+{
+    for (int i = 0; i < 16; i++) printf("%d ", (Uint8)(((int*)(&a))[i]));
     printf("\n");
 }
