@@ -19,7 +19,7 @@ As we see, perfomance of algorithm depends on amount of pixels in resulting pict
 
 ``t ~ width * height``
 
-Number of operating pixels in algorithm is ``640*560 = 358400``. It actually takes time to process all of them, so algorithm optimization required.
+Number of operating pixels in algorithm is ``640*560 = 358400``. It actually takes time to process all of them alternately, so algorithm optimization required.
 
 ## Optimization principles
 Ideas of optimization that use AVX2 and AVX512 instructions are the same.
@@ -30,16 +30,20 @@ We are able to process 8 pixels at the same time by using __m256i variables and 
 ... pay us to keep up to date with updates ...
 
 ## Time measuring principles
-To evaluate and compare the speed of working algorithms I calculate fps value of 10 cycles of Alpha-Blending.
+To visualise the Mandelbrot set, I use SFML, a modern graphics library for C++. It allows you to create a graphical window of the required size and display a picture as an array of pixels. There are special data type for pixels in SFML, it called ``Color`` and it contains four ``_uint8_t``.
 
-``fps = 1 / blending_time``
+There is a problem of evaluating algorithm working time while it uses SFML functions. For example we don't need to include diplaying time in calculations of fps, because it is not a part of the algorithm we speeding up and it requires the use of slow SFML functions.
 
-It's important to evaluate the time correctly, so when I do it, app don't draw anything in SFML, just operates with arrays of pixels
+To evaluate the speed of working algorithms correctly, I have created 2 programms: first one for visualizing Mandelbrot set and second one only for speed evaluations. To compare programms perfomances I calculate fps value of every Mandelbrot calculation in cycle. This is where the clock.restart() function from this library helped me, it updates the time counter and returns the time since its last call.
 
-Evaluations made with precision ~ ``0.3 sec^(-1)``
+``fps = 1 / calculating_time``
+
+Programm that evaluates speed also calculates average value of fps for the better precision. My measurements are made with a precision about ``2%``. The experiment shows that even room temperature can be important when estimating time, so all measurements had to be taken quickly and in the same conditions to eliminate the influence of other random processes on the computer's performance.
+
+``avg_fps = sum_fps / N_fps``
 
 ## Perfomance
-Running programms with different optimization flags and evaluating their perfomances gave me data for the following table:
+Running programms with different optimization flags and evaluating their perfomances gave me data for the following table. Measurements are taken in 3 runs of the programm and all three anerage values are also averaged.
 
 |optimization \ flag|None    |-O0 |-O1 |-O2  |-O3      |-Ofast   |
 |:------------------|:------:|:--:|:--:|:--: |:-------:|:-------:|
@@ -56,7 +60,7 @@ Running programms with different optimization flags and evaluating their perfoma
 |abs speed increase |**5.7** |5.7 |9.8 |34.5 |34.0     |32.3     |
 |rel speed increase |**1.7** |1.7 |1.5 |~1.0 |~1.0     |~1.0     |
 
-In the table programm speed is given in ``fps = 1/sec``.
+In the table programm speed is given in ``fps = 1 / sec``
 
 To compare SIMD-instructions with each other and evaluate an impact of optimization flags I calculated 2 differernt сoefficients of speed increase:
 - ``abs_speed_increase = instruction_fps / no_instruction_fps``, where time periods are taken from the perfomances with the same flags set
