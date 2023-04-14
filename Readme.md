@@ -5,7 +5,7 @@
 ## Introduction
 In this work I tried different ways of speeding up the Mandelbrot set calculation algorithm. For that purpose I used available on my computer SIMD-instructions: SSE, AVX2 and AVX512.
 
-**Goals**: 
+**Goals**:
 - to achieve maximum speedup of the program using SIMD-instructions and optimization flags
 - to measure and compare perfomances of SSE, AVX2 and AVX512 instructions
 - to evaluate influence of compilation flags on the speed of the programm
@@ -22,15 +22,37 @@ Coordinates of ``Z(n+1)`` are calculated by the rule:
 
 ``x(n+1) = x(n)^2 - y(n)^2 + X0``
 
-``y(n+1) = 2*x(n)*y(n) + Y0`` 
+``y(n+1) = 2*x(n)*y(n) + Y0``
 
 The calculations continue until the distance from a point Z(n) to the centre of the complex plane ``(0, 0)`` calculated as ``R(n) = sqrt(x(n)^2 + y(n)^2)`` is greater than ``R_max = 2``. We run a cycle untill ``R <= R_max`` and a number of iterations ``n < 255``, so each point corresponds to a singular number ``n``.
 
 Then, using the number of iterations ``n`` and any translating rool we calculate the components of the final pixel, which will be drawn in place of the starting point of this step of the algorithm.
 
-As for example, there is a simple realization of the described algorithm on the Python:
+As for example, there is a simple realization of the main function of the described algorithm on C:
+``
+    Uint8 GetIteration(float X0, float Y0)
+    {
+        Uint8 n_iter = 0;
+        float x  = 0.0;
+        float y  = 0.0;
+        float x2 = 0.0;
+        float y2 = 0.0;
+        float xy = 0.0;
+        float R  = 0.0;
 
-![Algorithm](Pictures/algorithm.png)
+        for (; R < R_max && n_iter < N_MAX; n_iter++)
+        {
+            x2 = x * x;
+            y2 = y * y;
+            xy = x * y;
+            x  = x2 - y2 + X0;
+            y  = xy + xy + Y0;
+            R  = x*x + y*y;
+        }
+
+        return n_iter;
+    }
+``
 
 As we see, perfomance of algorithm depends on amount of pixels in resulting picture
 
@@ -41,7 +63,7 @@ The number of operating pixels in algorithm is ``640*560 = 358400``. It actually
 ## Optimization principles
 Ideas of optimization that use SSE, AVX2 and AVX512 instructions are the same, but they partly have some different functions that are actually lead to the same result.
 
-We are able to process 4 pixels at the same time by using ``__m128``, ``__m128i`` variables from the SSE instruction set, 8 pixels at the same time by using ``__m256``, ``__m256i`` variables and AVX2 and finally process 16 pixels by using ``__m512``, ``__m512i`` variables and AVX512 instructions. 
+We are able to process 4 pixels at the same time by using ``__m128``, ``__m128i`` variables from the SSE instruction set, 8 pixels at the same time by using ``__m256``, ``__m256i`` variables and AVX2 and finally process 16 pixels by using ``__m512``, ``__m512i`` variables and AVX512 instructions.
 
 Basically, the algorithm is similar to the scalar case, but for the iteration counter I use a vector variable ``N``, and  to increae it after step I sum it with the result of comparing the vectors ``R`` (current distance) and ``R_max``. The result of comparing ``R`` and ``R_max`` using the ``_mm256_cmp_ps`` function (or similar) is a vector variable or mask, it depends on the SIMD-instructions set. At each iteration, it is checked that the mask is not equal to 0, because this means that the algorithm should be stopped. Then the same mask is added to the vector containing the number of iterations for each of the pixels. Before that it translated into a vector of integer values, such as ``N``. The remaining actions of the algorithm are similar to the unoptimized one, but they allows to perform actions for 4, 8 or 16 pixels at once.
 

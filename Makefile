@@ -1,4 +1,4 @@
-TARGET = SSE
+TARGET = AVX512
 
 NoAVX_FLAGS  =
 SSE_FLAGS    = -mavx
