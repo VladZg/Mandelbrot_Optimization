@@ -1,5 +1,7 @@
 # Optimization of drawing Mandelbrot set
 
+![Example 1](Pictures/1.png)
+
 ## Introduction
 In this work I tried different ways of speeding up the Mandelbrot set calculation algorithm. For that purpose I used available on my computer SIMD-instructions: SSE, AVX2 and AVX512.
 
@@ -10,11 +12,22 @@ In this work I tried different ways of speeding up the Mandelbrot set calculatio
 
 ## Algorithm of drawing
 
-![Example 1](Pictures/1.png)
-
 The Mandelbrot set is a good example of the beauty of mathematics, and there is a simple algorithm to construct it.
 
+We take a complex plane and divide it into a finite number of points. For each of them there are a sequence of complex numbers (points):
 
+``Z(n+1) = Z(n)+C0``, where C0 is the initial point on the complex plane.
+
+Coordinates of Z(n+1) are calculated by the rule:
+
+``x(n+1) = x(n)^2 - y(n)^2 + X0``
+``y(n+1) = 2*x(n)*y(n) + Y0`` 
+
+The calculations continue until the distance from a point Z(n) to the centre of the complex plane ``(0, 0)`` calculated as ``R(n) = sqrt(x(n)^2 + y(n)^2)`` is greater than ``R_max = 2``. We run a cycle untill ``R <= R_max`` and a number of iterations ``n < 255``, so for every point there are one number ``n``.
+
+Then, using the number of iterations ``n`` we calculate the components of the final pixel, which is drawn in place of the starting point of this step of the algorithm.
+
+As for example, there is a simple realization of the described algorithm on the Python:
 
 ![Algorithm](Pictures/algorithm.png)
 
@@ -22,7 +35,7 @@ As we see, perfomance of algorithm depends on amount of pixels in resulting pict
 
 ``t ~ width * height``
 
-Number of operating pixels in algorithm is ``640*560 = 358400``. It actually takes time to process all of them alternately, so algorithm optimization required.
+The number of operating pixels in algorithm is ``640*560 = 358400``. It actually takes time to process all of them alternately, so algorithm optimization required.
 
 ## Optimization principles
 Ideas of optimization that use SSE, AVX2 and AVX512 instructions are the same, but they partly have some different functions that are actually lead to the same result.
