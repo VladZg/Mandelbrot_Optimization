@@ -24,9 +24,9 @@ Coordinates of ``Z(n+1)`` are calculated by the rule:
 
 ``y(n+1) = 2*x(n)*y(n) + Y0`` 
 
-The calculations continue until the distance from a point Z(n) to the centre of the complex plane ``(0, 0)`` calculated as ``R(n) = sqrt(x(n)^2 + y(n)^2)`` is greater than ``R_max = 2``. We run a cycle untill ``R <= R_max`` and a number of iterations ``n < 255``, so for every point there are one number ``n``.
+The calculations continue until the distance from a point Z(n) to the centre of the complex plane ``(0, 0)`` calculated as ``R(n) = sqrt(x(n)^2 + y(n)^2)`` is greater than ``R_max = 2``. We run a cycle untill ``R <= R_max`` and a number of iterations ``n < 255``, so each point corresponds to a singular number ``n``.
 
-Then, using the number of iterations ``n`` we calculate the components of the final pixel, which is drawn in place of the starting point of this step of the algorithm.
+Then, using the number of iterations ``n`` and any translating rool we calculate the components of the final pixel, which will be drawn in place of the starting point of this step of the algorithm.
 
 As for example, there is a simple realization of the described algorithm on the Python:
 
