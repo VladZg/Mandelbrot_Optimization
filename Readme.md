@@ -29,7 +29,7 @@ The calculations continue until the distance from a point Z(n) to the centre of 
 Then, using the number of iterations ``n`` and any translating rool we calculate the components of the final pixel, which will be drawn in place of the starting point of this step of the algorithm.
 
 As for example, there is a simple realization of the main function of the described algorithm on C:
-``
+
     Uint8 GetIteration(float X0, float Y0)
     {
         Uint8 n_iter = 0;
@@ -52,7 +52,6 @@ As for example, there is a simple realization of the main function of the descri
 
         return n_iter;
     }
-``
 
 As we see, perfomance of algorithm depends on amount of pixels in resulting picture
 
