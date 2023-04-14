@@ -1,19 +1,18 @@
 # Optimization of drawing Mandelbrot set
 
-![Example 1](Pictures/1.png)
-
 ## Introduction
-In this work I tried different ways to speed up the Mandelbrot set calculation algorithm. For that purpose I used available on my computer SIMD-instructions: SSE, AVX2 and AVX512.
+In this work I tried different ways of speeding up the Mandelbrot set calculation algorithm. For that purpose I used available on my computer SIMD-instructions: SSE, AVX2 and AVX512.
 
 **Goals**: 
-- achieve maximum speedup of the program using SIMD instructions
-- measure and compare them
-- evaluate influence of compilation flags on the speed of the programm
+- to achieve maximum speedup of the program using SIMD-instructions and optimization flags
+- to measure and compare perfomances of SSE, AVX2 and AVX512 instructions
+- to evaluate influence of compilation flags on the speed of the programm
 
 ## Algorithm of drawing
 
-The Mandelbrot set is a good example of the beauty of mathematics, and there is a simple algorithm to construct it.
+![Example 1](Pictures/1.png)
 
+The Mandelbrot set is a good example of the beauty of mathematics, and there is a simple algorithm to construct it.
 
 
 As we see, perfomance of algorithm depends on amount of pixels in resulting picture
@@ -40,7 +39,7 @@ It's important to evaluate the time correctly, so when I do it, app don't draw a
 Evaluations made with precision ~ ``0.3 sec^(-1)``
 
 ## Perfomance
-Running programms with different optimization flags and evaluating their perfomances gave me data for the following table
+Running programms with different optimization flags and evaluating their perfomances gave me data for the following table:
 
 |optimization \ flag|None    |-O0 |-O1 |-O2  |-O3      |-Ofast   |
 |:------------------|:------:|:--:|:--:|:--: |:-------:|:-------:|
@@ -57,22 +56,20 @@ Running programms with different optimization flags and evaluating their perfoma
 |abs speed increase |**5.7** |5.7 |9.8 |34.5 |34.0     |32.3     |
 |rel speed increase |**1.7** |1.7 |1.5 |~1.0 |~1.0     |~1.0     |
 
-In the table programm speed is given in fps (1/sec).
+In the table programm speed is given in ``fps = 1/sec``.
 
 To compare SIMD-instructions with each other and evaluate an impact of optimization flags I calculated 2 differernt сoefficients of speed increase:
-- abs_speed_increase = instruction_working_time/no_instruction_working_time, where time periods are taken from the perfomances with the same flags set
-- rel_speed_increase = instruction_working_time/prev_instruction_working_time, where time periods are also taken from the perfomances with the same flags set
+- ``abs_speed_increase = instruction_fps / no_instruction_fps``, where time periods are taken from the perfomances with the same flags set
+- ``rel_speed_increase = instruction_fps / prev_instruction_fps``, where time periods are also taken from the perfomances with the same flags set
 
-The absolute coefficient factor are used to compare a program with and without an AVX or SSE instruction. The relative coefficient are used to compare SSE, AVX2 and AVX512 instructions with each other.
+The absolute coefficient are used to compare a perfomence of program with and without an AVX or SSE instruction. The relative coefficient are used to compare SSE, AVX2 and AVX512 instructions with each other.
 
+The impact of the optimisation flags can be seen directly from the resulting table.
 
+To evaluate maximum speed up of the algorithm achieved in this work I use the following coefficient:
+``max_speed_increase = (max_fps / no_optimizations_fps)``
 
-``speed_increase = (optimization_time / no_optimization_time)`` ,
-where times are taken with the same set of flags
-
-Max speedup is **147,0/9.1 = 16.2**
-
-## Conclusion
+## Conclusions
 Thus, optimizing Mandelbrot set drawing algorithm by using AVX2 instructions, a speedup of **27.6/4.6 = 6.0** times was achieved
 
 ## Colourful examples
