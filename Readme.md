@@ -15,6 +15,9 @@ In this work I tried different ways of speeding up the Mandelbrot set calculatio
 The Mandelbrot set is a good example of the beauty of mathematics, and there is a simple algorithm to construct it.
 
 
+
+![Algorithm](Pictures/algorithm.png)
+
 As we see, perfomance of algorithm depends on amount of pixels in resulting picture
 
 ``t ~ width * height``
@@ -22,9 +25,9 @@ As we see, perfomance of algorithm depends on amount of pixels in resulting pict
 Number of operating pixels in algorithm is ``640*560 = 358400``. It actually takes time to process all of them alternately, so algorithm optimization required.
 
 ## Optimization principles
-Ideas of optimization that use AVX2 and AVX512 instructions are the same.
+Ideas of optimization that use SSE, AVX2 and AVX512 instructions are the same, but they partly have some different functions that are actually lead to the same result.
 
-We are able to process 8 pixels at the same time by using __m256i variables and AVX2 instructions or 16 pixels by using __m512i variables and AVX512 instructions. Here is mechanism of optimization described step-by-step.
+We are able to process 4 pixels at the same time by using ``__m128``, ``__m128i`` variables from the SSE instruction set, 8 pixels at the same time by using ``__m256``, ``__m256i`` variables and AVX2 and finally process 16 pixels by using ``__m512``, ``__m512i`` variables and AVX512 instructions. Here is mechanism of optimization described step-by-step.
 
 ... this section is in progress ...
 ... pay us to keep up to date with updates ...
@@ -34,9 +37,15 @@ To visualise the Mandelbrot set, I use SFML, a modern graphics library for C++. 
 
 There is a problem of evaluating algorithm working time while it uses SFML functions. For example we don't need to include diplaying time in calculations of fps, because it is not a part of the algorithm we speeding up and it requires the use of slow SFML functions.
 
-To evaluate the speed of working algorithms correctly, I have created 2 programms: first one for visualizing Mandelbrot set and second one only for speed evaluations. To compare programms perfomances I calculate fps value of every Mandelbrot calculation in cycle. This is where the clock.restart() function from this library helped me, it updates the time counter and returns the time since its last call.
+To evaluate the speed of working algorithms correctly, I have created 2 programms: first one for visualizing Mandelbrot set and second one only for speed measurments. To compare programms perfomances I calculate fps value of every Mandelbrot calculation in cycle. This is where the ``clock.restart()`` function from this library helped me, it updates the time counter and returns the time since its last call.
 
 ``fps = 1 / calculating_time``
+
+An important factor that affects perfomance is also how the colour components are calculated from the resulting number of iterations for each pixel. So that this part of the drawing algorithm is not limiting, I use a simple way to convert the number of iterations into colour components for the programm that evaluates perfomance of algorithm:
+
+``n -> RGB(n, 255, 255-n, 255)``
+
+However, for the version of programm that draws the resulting set I use various ways of translating the number of iterations to color to get beautiful images. You can see the examples of pictures in the end of this work.
 
 Programm that evaluates speed also calculates average value of fps for the better precision. My measurements are made with a precision about ``2%``. The experiment shows that even room temperature can be important when estimating time, so all measurements had to be taken quickly and in the same conditions to eliminate the influence of other random processes on the computer's performance.
 
@@ -66,11 +75,11 @@ To compare SIMD-instructions with each other and evaluate an impact of optimizat
 - ``abs_speed_increase = instruction_fps / no_instruction_fps``, where time periods are taken from the perfomances with the same flags set
 - ``rel_speed_increase = instruction_fps / prev_instruction_fps``, where time periods are also taken from the perfomances with the same flags set
 
-The absolute coefficient are used to compare a perfomence of program with and without an AVX or SSE instruction. The relative coefficient are used to compare SSE, AVX2 and AVX512 instructions with each other.
+The absolute coefficients are used to compare a perfomence of program with and without an AVX or SSE instruction. The relative coefficients are used to compare SSE, AVX2 and AVX512 instructions with each other.
 
-The impact of the optimisation flags can be seen directly from the resulting table.
+The impact of the optimization flags can be seen directly from the resulting table.
 
-To evaluate maximum speed up of the algorithm achieved in this work I use the following coefficient:
+To evaluate maximum speed up of the algorithm achieved in this work I use the following coefficient
 ``max_speed_increase = (max_fps / no_optimizations_fps)``
 
 ## Conclusions
