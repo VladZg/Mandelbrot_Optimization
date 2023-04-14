@@ -97,7 +97,10 @@ To evaluate maximum speed up of the algorithm achieved in this work I use the fo
 ``max_speed_increase = (max_fps / no_optimizations_fps)``
 
 ## Conclusions
-Thus, optimizing Mandelbrot set drawing algorithm by using AVX2 instructions, a speedup of **27.6/4.6 = 6.0** times was achieved
+
+- The main goal of the work has been achieved: I sped up the algorithm's work as many times as possible, experiment shows that is about **163.1/2.5 = 65.2** times. It is also interesting that, formally, the maximum speed of the program showed flag ``-03`` when using SSE instructions. In fact, speeds of programms using SSE, AVX2 and AVX512 instructions and compilation flags ``-02``, ``-03``, ``-Ofast``, as we see from table are very similar, and differences between instructions may be related to measurement error. However, the perfomances of programms using and not using intrinsics on the same flags are already very different. From the table we see that this difference is about **33** times!
+
+- As it expected, the algorithm works faster when it use SIMD instructions. To evaluate the contribution of these instructions, consider the first or column of the table in which the program worked without optimization flags or with the ``-O0`` flag. Accelerations of **1.6**, **3.3**, **5.7** times corresponding to the unoptimized version were achieved using SSE, SSE2 and AVX 512 instructions. Comparing these SIMD-instructions with each other, the algorithm working with AVX2 was **2.1** times faster than SE, and AVX512 sped up the previous version by **1.7** times. These data justify the use of such instructions as AVX512 in optimizing the work of programs, because even without the efforts of the compiler, you can achieve an speeding up of the algorithm by almost **6** times! Unfortunately, only newer models of Intel processors support AVX512, so for those who do not have the opportunity to use them may use AVX2, which are already many processors have.
 
 ## Colourful examples
 
