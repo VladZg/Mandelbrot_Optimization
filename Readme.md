@@ -16,11 +16,12 @@ The Mandelbrot set is a good example of the beauty of mathematics, and there is 
 
 We take a complex plane and divide it into a finite number of points. For each of them there are a sequence of complex numbers (points):
 
-``Z(n+1) = Z(n)+C0``, where C0 is the initial point on the complex plane.
+``Z(n+1) = Z(n)+C0``, where ``C0`` is the initial point on the complex plane.
 
-Coordinates of Z(n+1) are calculated by the rule:
+Coordinates of ``Z(n+1)`` are calculated by the rule:
 
 ``x(n+1) = x(n)^2 - y(n)^2 + X0``
+
 ``y(n+1) = 2*x(n)*y(n) + Y0`` 
 
 The calculations continue until the distance from a point Z(n) to the centre of the complex plane ``(0, 0)`` calculated as ``R(n) = sqrt(x(n)^2 + y(n)^2)`` is greater than ``R_max = 2``. We run a cycle untill ``R <= R_max`` and a number of iterations ``n < 255``, so for every point there are one number ``n``.
