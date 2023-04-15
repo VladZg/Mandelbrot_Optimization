@@ -3,7 +3,7 @@
 ![Example 1](Pictures/1.png)
 
 ## Introduction
-In this work I tried different ways of speeding up the Mandelbrot set calculation algorithm. For that purpose I used available on my computer SIMD-instructions: SSE, AVX2 and AVX512.
+In this work I tried different ways of speeding up the Mandelbrot set calculation algorithm. For that purpose I used available on my computer SIMD-instructions: SSE, AVX2 and AVX512 and g++ optimization flags.
 
 **Goals**:
 - to achieve maximum speedup of the program using SIMD-instructions and optimization flags
