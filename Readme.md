@@ -105,7 +105,7 @@ Running programms with different optimization flags and evaluating their perfoma
 |abs speed increase |**5.7** |5.7 |9.8 |34.5 |34.0     |32.3     |
 |rel speed increase |**1.7** |1.7 |1.5 |~1.0 |~1.0     |~1.0     |
 
-In the table programm speed is given in ``fps = 1 / sec``
+In the table speed is given in ``fps = 1 / sec``.
 
 To compare SIMD-instructions with each other and evaluate an impact of optimization flags I calculated 2 differernt сoefficients of speed increase:
 - ``abs_speed_increase = instruction_fps / no_instruction_fps``, where time periods are taken from the perfomances with the same flags set
@@ -124,7 +124,7 @@ To evaluate maximum speed up of the algorithm achieved in this work I use the fo
 
 - As it expected, the algorithm works faster when it use SIMD instructions. To evaluate the contribution of these instructions, consider the first or column of the table in which the program worked without optimization flags or with the ``-O0`` flag. Accelerations of **1.6**, **3.3**, **5.7** times corresponding to the unoptimized version were achieved using SSE, SSE2 and AVX 512 instructions. Comparing these SIMD-instructions with each other, the algorithm working with AVX2 was **2.1** times faster than SE, and AVX512 sped up the previous version by **1.7** times. These data justify the use of such instructions as AVX512 in optimizing the work of programs, because even without the efforts of the compiler, you can achieve an speeding up of the algorithm by almost **6** times! Unfortunately, only newer models of Intel processors support AVX512, so for those who do not have the opportunity to use them may use AVX2, which many processors already have.
 
-- Evaluating the impact of the compilation flags on the programms perfomances, the table shows that on powerful flags ``-O2``, ``-O3``, ``-Ofast`` the acceleration is the most significant and it is about **40**, **19**, **27** times compared to programs without flags, but using same SSE, AVX2, AVX512 SIMD-instructions. At the same time, their impacts don't differ so much from each other. Programms, compiled with ``-O3`` flag show the fastest perfomances. The work of programms with the ``-O1`` flag is already very different, when using it speed increases about **3-4** times comparing to programms with the same SIMD-instructions but without optimization flags.
+- Evaluating the impact of the compilation flags on the programms perfomances, the table shows that on powerful flags ``-O2``, ``-O3``, ``-Ofast`` the acceleration is the most significant and it is about **40**, **19**, **27** times compared to programs without flags, but using same SSE, AVX2, AVX512 SIMD-instructions. At the same time, impacts of these flags don't differ so much from each other. Programms, compiled with ``-O3`` flag show the best perfomances. The work of programms with the ``-O1`` flag is already very different, when using it speed increases about **3-4** times comparing to programms with the same SIMD-instructions but without optimization flags. Thus, for your optimization purposes you should choose compilation flags wisely.
 
 ## Colourful examples
 
