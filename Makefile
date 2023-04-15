@@ -4,7 +4,7 @@ NoAVX_FLAGS  =
 SSE_FLAGS    = -mavx
 AVX2_FLAGS   = -mavx2
 AVX512_FLAGS = -mavx512vl -mavx512bw
-OPTM_FLAGS   = -Ofast
+OPTM_FLAGS   = -O3
 
 FLAGS = $($(TARGET)_FLAGS) $(OPTM_FLAGS)
 SRC_DIR = ./Source
