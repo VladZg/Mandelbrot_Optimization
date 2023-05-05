@@ -28,7 +28,7 @@ The calculations continue until the distance from a point Z(n) to the centre of 
 Then, using the number of iterations ``n`` and any translating rule we calculate the components of the final pixel. We draw it in place of that point.
 
 As for example, there is a simple implementation of the main algorithm function:
-
+```C++
     Uint8 GetIteration(float X0, float Y0)
     {
         Uint8 n_iter = 0;
@@ -51,7 +51,7 @@ As for example, there is a simple implementation of the main algorithm function:
 
         return n_iter;
     }
-
+```
 As we see, perfomance of the algorithm depends on amount of pixels in resulting picture
 
 ``t ~ width * height``
